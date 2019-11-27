@@ -4,6 +4,25 @@ const Note = {
   noteIdCounter: 8,
   dragged: null,
 
+  createNote (id = null, content = '') {
+    const noteElement = document.createElement('div');
+    noteElement.classList.add('note');
+    noteElement.setAttribute('draggable', 'true');
+    noteElement.textContent = content;
+
+    if (id) {
+      noteElement.setAttribute('data-note-id', id);
+
+    } else {
+      noteElement.setAttribute('data-note-id', Note.noteIdCounter);
+      Note.noteIdCounter++;
+    }
+
+    Note.process(noteElement);
+
+    return noteElement;
+  },
+
   process (noteElement) {
     noteElement.addEventListener('dblclick', function (evt) {
       noteElement.setAttribute('contenteditable', 'true');
@@ -20,6 +39,8 @@ const Note = {
       if (!noteElement.textContent.trim().length) {
         noteElement.remove();
       }
+
+      Application.save();
     });
 
     noteElement.addEventListener('dragstart', Note.dragstart);
@@ -43,10 +64,16 @@ const Note = {
     document
       .querySelectorAll('.note')
       .forEach(x => x.classList.remove('under'));
+
+    evt.stopPropagation();
+
+    Application.save();
   },
 
   dragenter (evt) {
-    if (this === Note.dragged) {
+    evt.stopPropagation();
+
+    if (!Note.dragged || this === Note.dragged) {
       return;
     }
     this.classList.add('under');
@@ -54,13 +81,17 @@ const Note = {
 
   dragover (evt) {
     evt.preventDefault();
-    if (this === Note.dragged) {
+    evt.stopPropagation();
+
+    if (!Note.dragged || this === Note.dragged) {
       return;
     }
   },
 
   dragleave (evt) {
-    if (this === Note.dragged) {
+    evt.stopPropagation();
+
+    if (!Note.dragged || this === Note.dragged) {
       return;
     }
     this.classList.remove('under');
@@ -69,7 +100,7 @@ const Note = {
   drop (evt) {
     evt.stopPropagation();
 
-    if (this === Note.dragged) {
+    if (!Note.dragged || this === Note.dragged) {
       return;
     }
 
@@ -80,9 +111,9 @@ const Note = {
 
       if (indexA < indexB) {
         this.parentElement.insertBefore(Note.dragged, this)
-      } else (
+      } else {
         this.parentElement.insertBefore(Note.dragged, this.nextElementSibling)
-      )
+      }
     } else {
       this.parentElement.insertBefore(Note.dragged, this)
     }
